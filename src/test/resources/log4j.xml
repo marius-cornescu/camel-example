@@ -9,6 +9,14 @@
         </layout>
     </appender>
 
+    <category name="org.apache.camel">
+        <priority value="INFO" />
+    </category>
+    <category name="org.jboss.weld">
+        <priority value="INFO" />
+    </category>
+
+
     <category name="com.rtzan">
         <priority value="TRACE" />
     </category>
