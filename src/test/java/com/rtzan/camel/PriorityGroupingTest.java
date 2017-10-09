@@ -102,7 +102,7 @@ public class PriorityGroupingTest {
         
         Thread.sleep(20 * 1000L);
         
-        assertEquals(2, finalProcessor.getHistory());
+        assertEquals(4, finalProcessor.getHistory().size());
     }
 
 }

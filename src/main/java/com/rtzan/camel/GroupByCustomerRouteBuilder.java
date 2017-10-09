@@ -47,13 +47,20 @@ public class GroupByCustomerRouteBuilder extends RouteBuilder {
         .to("seda:groupByCustomer");
         
         from("seda:groupByCustomer?concurrentConsumers=" + AGGREGATION_CONCURRENT)
-            .aggregate(body())
+            .aggregate(new ProductCustomerCorrelation()).parallelProcessing()
                 .aggregationStrategy(new ClientAggregationStrategy())
                 .completionTimeout(AGGREGATION_TIME_OUT_MS)
-            .end()
+                .to("direct:groupByCustomer-FINAL")
+                .end()
         .log(LoggingLevel.INFO, "aggregation done")
         .log(LoggingLevel.INFO, "sourcing done")
+        //.process(groupByCustomerFinalProcessor)
+        .stop()
+        ;
+        
+        from("direct:groupByCustomer-FINAL")
         .process(groupByCustomerFinalProcessor)
+        .stop()
         ;
         
         //J++
