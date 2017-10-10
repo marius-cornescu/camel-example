@@ -1,9 +1,6 @@
 /** Free */
 package com.rtzan.camel;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.rtzan.model.Cart;
 import com.rtzan.model.Product;
 

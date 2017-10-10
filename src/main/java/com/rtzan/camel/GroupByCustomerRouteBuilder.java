@@ -17,16 +17,10 @@
 package com.rtzan.camel;
 
 import com.rtzan.model.Receipt;
-import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
-import org.apache.camel.Processor;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.cdi.Uri;
 
 import javax.inject.Inject;
-
-import static org.apache.camel.builder.xml.XPathBuilder.xpath;
 
 /**
  * A Camel Router
