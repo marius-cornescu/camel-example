@@ -1,9 +1,3 @@
-/**
- *  Copyright Murex S.A.S., 2003-2017. All Rights Reserved.
- * 
- *  This software program is proprietary and confidential to Murex S.A.S and its affiliates ("Murex") and, without limiting the generality of the foregoing reservation of rights, shall not be accessed, used, reproduced or distributed without the
- *  express prior written consent of Murex and subject to the applicable Murex licensing terms. Any modification or removal of this copyright notice is expressly prohibited.
- */
 /** Free */
 package com.rtzan.camel;
 
@@ -22,29 +16,22 @@ import org.slf4j.LoggerFactory;
 
 public class ClientAggregationStrategy implements AggregationStrategy {
 
-    //~ ----------------------------------------------------------------------------------------------------------------
-    //~ Instance fields 
-    //~ ----------------------------------------------------------------------------------------------------------------
-
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    //~ ----------------------------------------------------------------------------------------------------------------
-    //~ Methods 
-    //~ ----------------------------------------------------------------------------------------------------------------
 
     @Override
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-        Product body = newExchange.getIn().getBody(Product.class);
-        Cart bodies;
+        Product product = newExchange.getIn().getBody(Product.class);
+        Cart cart;
         if (oldExchange == null) {
-            bodies = new Cart(body.getCustomer());
-            bodies.addItem(body, 1);
-            newExchange.getIn().setBody(bodies);
+            cart = new Cart(product.getCustomer());
+            cart.addItem(product, 1);
+            newExchange.getIn().setBody(cart);
+            logger.debug("Customer [{}] has [{}] products", product.getCustomer(), cart.getCartItems().size());
             return newExchange;
         } else {
-            bodies = oldExchange.getIn().getBody(Cart.class);
-            bodies.addItem(body, 1);
-            logger.debug("Customer [{}] has [{}] products", body.getCustomer(), bodies.getCartItems().size());
+            cart = oldExchange.getIn().getBody(Cart.class);
+            cart.addItem(product, 1);
+            logger.debug("Customer [{}] has [{}] products", product.getCustomer(), cart.getCartItems().size());
             return oldExchange;
         }
     }

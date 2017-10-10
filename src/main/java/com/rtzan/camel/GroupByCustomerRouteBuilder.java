@@ -16,8 +16,13 @@
  */
 package com.rtzan.camel;
 
+import com.rtzan.model.Receipt;
+import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.cdi.Uri;
 
 import javax.inject.Inject;
 
@@ -36,7 +41,7 @@ public class GroupByCustomerRouteBuilder extends RouteBuilder {
     
     @Inject
     private GroupByCustomerFinalProcessor groupByCustomerFinalProcessor;
-
+    
     /**
      * Lets configure the Camel routing rules using Java code...
      */
@@ -48,14 +53,26 @@ public class GroupByCustomerRouteBuilder extends RouteBuilder {
         
         from("seda:groupByCustomer?concurrentConsumers=" + AGGREGATION_CONCURRENT)
             .aggregate(new ProductCustomerCorrelation()).parallelProcessing()
-                .aggregationStrategy(new ClientAggregationStrategy())
-                .completionTimeout(AGGREGATION_TIME_OUT_MS)
-                .to("direct:groupByCustomer-FINAL")
-                .end()
-        .log(LoggingLevel.INFO, "aggregation done")
-        .log(LoggingLevel.INFO, "sourcing done")
-        //.process(groupByCustomerFinalProcessor)
+                    .aggregationStrategy(new ClientAggregationStrategy())
+                    .completionTimeout(AGGREGATION_TIME_OUT_MS)
+                .log(LoggingLevel.INFO, "aggregation done for ${body.customer}")
+                .to("seda:groupByCustomer-SOURCING")
+            .end()
         .stop()
+        ;
+        
+        from("seda:groupByCustomer-SOURCING?concurrentConsumers=" + AGGREGATION_CONCURRENT)
+        // do sourcing
+        .process(new CustomerSelectionProcessor())
+        .choice()
+        .when(body().isInstanceOf(Receipt.class))
+            .log(LoggingLevel.INFO, "sourcing done for ${body.customer}")
+            .to("direct:groupByCustomer-FINAL")
+            .endChoice()
+        .otherwise()
+            .log(LoggingLevel.INFO, "sourcing NOT done for ${body.customer}")
+            .stop()
+        .endChoice()
         ;
         
         from("direct:groupByCustomer-FINAL")
