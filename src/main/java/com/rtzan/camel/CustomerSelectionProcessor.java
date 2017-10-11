@@ -31,12 +31,12 @@ public class CustomerSelectionProcessor implements Processor {
         Rule rule = exchange.getIn().getHeader("SELECTION_RULE", Rule.class);
         Cart cart = exchange.getIn().getBody(Cart.class);
 
-        List<Product> deductibleProducts = new ArrayList<>();
         Receipt receipt = null;
 
         logger.info("### Ruling on [{}] ###", cart.getCustomer());
 
         for (Criteria criteria : rule.getCriterias()) {
+            List<Product> deductibleProducts = new ArrayList<>();
             boolean matchRule = ruleOnCriteria(criteria, cart.getCartItems(), deductibleProducts);
             logger.info("Criteria [{}] on customer [{}] with products [{}] had [{}] match", criteria, cart.getCustomer(), cart.getCartItems(), matchRule);
 

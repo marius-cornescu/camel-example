@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 /**
@@ -100,7 +101,7 @@ public class PriorityGroupingTest {
         Thread.sleep(20 * 1000L);
 
         assertEquals(customerCnt, finalProcessor.getHistory().size());
-        assertEquals(productsPerCustomerCnt, finalProcessor.getHistory().get(0).getCartItems().size());
+        assertEquals(2, finalProcessor.getHistory().get(0).getCombo().size());
     }
     
     private Rule createBasicRule() {
