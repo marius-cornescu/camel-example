@@ -17,10 +17,13 @@
 package com.rtzan.camel;
 
 import com.rtzan.model.Receipt;
+import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 /**
  * A Camel Router
@@ -36,6 +39,9 @@ public class GroupByCustomerRouteBuilder extends RouteBuilder {
     @Inject
     private GroupByCustomerFinalProcessor groupByCustomerFinalProcessor;
     
+    @Inject
+    private MessageCounter messageCounter;
+    
     /**
      * Lets configure the Camel routing rules using Java code...
      */
@@ -43,12 +49,14 @@ public class GroupByCustomerRouteBuilder extends RouteBuilder {
 
         //J--
         from("direct:input")
+            .process(new MessageCountProcessor(messageCounter, "PROCESSED_CUSTOMER_COUNTER"))
         .to("seda:groupByCustomer");
         
         from("seda:groupByCustomer?concurrentConsumers=" + AGGREGATION_CONCURRENT)
             .aggregate(new ProductCustomerCorrelation()).parallelProcessing()
                     .aggregationStrategy(new ClientAggregationStrategy())
-                    .completionTimeout(AGGREGATION_TIME_OUT_MS)
+                    //.completionTimeout(AGGREGATION_TIME_OUT_MS)
+                    .completionPredicate(new ClientAggregationCompletionPredicate())
                 .log(LoggingLevel.INFO, "aggregation done for ${body.customer}")
                 .to("seda:groupByCustomer-SOURCING")
             .end()

@@ -24,7 +24,9 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -73,8 +75,12 @@ public class PriorityGroupingTest {
         
         List<Product> products = createBasicProducts();
 
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("SELECTION_RULE", rule);
+        headers.put("TOTAL_CUSTOMER_COUNT", new Integer(products.size()));
+
         for (Product product : products) {
-            testSetup.getInputEndpoint().sendBodyAndHeader(product, "SELECTION_RULE", rule);
+            testSetup.getInputEndpoint().sendBodyAndHeaders(product, headers);
         }
 
         Thread.sleep(20 * 1000L);
@@ -84,26 +90,36 @@ public class PriorityGroupingTest {
 
     @Test
     public void testLargeVolumePriorityGrouping() throws Exception {
-        int customerCnt = 100;
-        int productsPerCustomerCnt = 100;
+        int customerCnt = 3000;
+        int productsPerCustomerCnt = 50;
         
         Rule rule = createBasicRule();
         
-        List<Customer> customers = createCustomers("customer_", 100);
-        List<Product> products = createProductsForCustomers(customers, 100);
+        List<Product> products = generateLargeVolumeTestData("customer_", customerCnt, productsPerCustomerCnt);
         
+       
         Collections.shuffle(products);
+        
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("SELECTION_RULE", rule);
+        headers.put("TOTAL_CUSTOMER_COUNT", products.size());
 
         for (Product product : products) {
-            testSetup.getInputEndpoint().sendBodyAndHeader(product, "SELECTION_RULE", rule);
+            testSetup.getInputEndpoint().sendBodyAndHeaders(product, headers);
         }
 
-        Thread.sleep(20 * 1000L);
+        Thread.sleep(120 * 1000L);
 
         assertEquals(customerCnt, finalProcessor.getHistory().size());
         assertEquals(2, finalProcessor.getHistory().get(0).getCombo().size());
     }
-    
+
+    private List<Product> generateLargeVolumeTestData(String customer_, int customerCnt, int productsPerCustomerCnt) {
+        List<Customer> customers = createCustomers("customer_", customerCnt);
+        List<Product> products = createProductsForCustomers(customers, productsPerCustomerCnt);
+        return products;
+    }
+
     private Rule createBasicRule() {
         Criteria criteria1 = new Criteria(1, "first", Arrays.asList("book", "milk"));
         Criteria criteria2 = new Criteria(2, "second", Arrays.asList("big_book"));
